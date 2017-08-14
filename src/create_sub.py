@@ -99,7 +99,11 @@ def create_products_faron(df):
 
 if __name__ == '__main__':
     arboretum = pd.read_pickle('prediction_arboretum.pkl')
+    arboretum.sort_values(by=['order_id', 'product_id'], inplace=True)
     lgbm = pd.read_pickle('prediction_lgbm.pkl')
+    lgbm.sort_values(by=['order_id', 'product_id'], inplace=True)
+    xgb = pd.read_pickle('prediction_xgb.pkl')
+    xgb.sort_values(by=['order_id', 'product_id'], inplace=True)
     data = arboretum
 
     print(arboretum.shape)
@@ -108,14 +112,20 @@ if __name__ == '__main__':
     print(lgbm.shape)
     print(lgbm.head())
     print('-------------------------------------------------------------')
+    print(xgb.shape)
+    print(xgb.head())
+    print('-------------------------------------------------------------')
 
-    data['prediction'] = arboretum['prediction']*0.65 + lgbm['prediction']*0.35
+    data['prediction'] = arboretum['prediction']*0.63 + lgbm['prediction']*0.23 + xgb['prediction']*0.14
     print(data.shape)
     print(data.head())
+
+    del arboretum, lgbm, xgb
+
 
     df = data.loc[data.prediction > 0.01, ['order_id', 'prediction', 'product_id']]
 
     # Group products per order here
     df_order = applyParallel(tqdm(df.groupby(df.order_id)), create_products_faron).reset_index()
 
-    df_order[['order_id', 'products']].to_csv('submissions/sub_ensemble_wa.csv', index=False)
+    df_order[['order_id', 'products']].to_csv('../submissions/sub_ensemble_wa632314.csv', index=False)
